@@ -52,12 +52,11 @@ class Simulation:
 
         self.portfolio_history.append(self.algorithm.setup(self.market_data[0,:]))
         for t in range(1,self.end,self.period):
-=======
 
         self.algorithm.setup(self.market_data[0,:])
         self.log_state(0)
         for t in tqdm(range(1,self.end,self.period)):
->>>>>>> 980256a789d76eae3c8b6ba8ab22005e6e8abde1
+
             self.step(t)
 
 
