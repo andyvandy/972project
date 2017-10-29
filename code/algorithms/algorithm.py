@@ -1,5 +1,7 @@
 '''
 Base class that other algorithms will inherit from
+
+The algorithm is responsible for setting the portfolio vector each period
 '''
 import numpy as np
 

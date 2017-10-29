@@ -9,7 +9,6 @@ class Constant_rebalance(Algorithm):
         self.weight=1.0/self.n_assets # don't want to recompute this all of the time
         weight=self.weight*self.value
         self.portfolio=[weight/price_i for price_i in first_period]
-        return self.portfolio
 
     def step(self,t,history):
         '''
@@ -18,11 +17,10 @@ class Constant_rebalance(Algorithm):
         '''
         if self.verbose:
             print(history[t,:])
-        value=value_portfolio(np.array(history[t,:]),self.portfolio)
+        self.value=value_portfolio(history[t,:],self.portfolio)
 
-        weight=value*self.weight
+        weight=self.value*self.weight
         self.portfolio= [weight/price_i for price_i in history[t,:]]
         if self.verbose:
             print("\tportfolio: {}".format(self.portfolio))
-            print("\tvalue: {}".format(value))
-        return self.portfolio
+            print("\tvalue: {}".format(self.value))
