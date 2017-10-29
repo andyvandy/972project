@@ -49,10 +49,11 @@ class Simulation:
         if this is slow we can enable storing of the results so that we don't haveto rerun this
         if we avoid printing we can benefit from tqdm's loading bar feature which is quite nice
         '''
-<<<<<<< HEAD
+
         self.portfolio_history.append(self.algorithm.setup(self.market_data[0,:]))
         for t in range(1,self.end,self.period):
 =======
+
         self.algorithm.setup(self.market_data[0,:])
         self.log_state(0)
         for t in tqdm(range(1,self.end,self.period)):
@@ -82,10 +83,6 @@ class Simulation:
         compute various performance measures such as the sharpe ratio.
         '''
         pass
-
-
-
-
 
 if __name__ =="__main__":
     parser = argparse.ArgumentParser(description='Run simulations')
