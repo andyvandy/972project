@@ -64,6 +64,7 @@ class Simulation:
         if we avoid printing we can benefit from tqdm's loading bar feature which is quite nice
         '''
 
+
         self.algorithm.setup(self.market_data[0,:],model_params=self.model_params)
         self.log_state(0)
         for t in tqdm(range(1,self.end,self.period)):
@@ -100,6 +101,7 @@ class Simulation:
         compute various performance measures such as the sharpe ratio.
         '''
         pass
+
 
 def extract_relative_prices(market_data):
     return [np.zeros(market_data.shape[1])] +[ np.divide(market_data[i+1],market_data[i]) for i in range(market_data.shape[0]-1)]
