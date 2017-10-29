@@ -48,7 +48,7 @@ class Simulation:
         if we avoid printing we can benefit from tqdm's loading bar feature which is quite nice
         '''
         self.portfolio_history.append(self.algorithm.setup(self.market_data[0,:]))
-        for t in tqdm(range(1,self.end,self.period)):
+        for t in range(1,self.end,self.period):
             self.step(t)
 
 
