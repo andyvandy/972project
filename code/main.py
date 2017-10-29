@@ -25,7 +25,8 @@ def main(args):
     }
     sim=Simulation(**sim_params)
     sim.run()
-    plot_value_over_time(sim.portfolio_history,sim.market_data)
+    plot_value_over_time(sim.value_history)
+    plot_value_over_time(sim.market_data)
 
 class Simulation:
     '''
@@ -40,6 +41,7 @@ class Simulation:
         self.algorithm=algo_class(period=period,n_assets=self.market_data.shape[1],verbose=verbose) 
         self.price_history=[]
         self.portfolio_history=[] #todo preallocate these
+        self.value_history=[]
 
     def run(self):
         '''
@@ -47,7 +49,8 @@ class Simulation:
         if this is slow we can enable storing of the results so that we don't haveto rerun this
         if we avoid printing we can benefit from tqdm's loading bar feature which is quite nice
         '''
-        self.portfolio_history.append(self.algorithm.setup(self.market_data[0,:]))
+        self.algorithm.setup(self.market_data[0,:])
+        self.log_state(0)
         for t in tqdm(range(1,self.end,self.period)):
             self.step(t)
 
@@ -62,7 +65,12 @@ class Simulation:
             print("Simulation step # {}:".format(t))
         self.price_history= self.market_data[:t+1,:]
         #if self.verbose: print(self.price_history)
-        self.portfolio_history.append(self.algorithm.step(t,self.price_history))
+        self.algorithm.step(t,self.price_history)
+        self.log_state(t)
+
+    def log_state(self,t):
+        self.portfolio_history.append(self.algorithm.portfolio)
+        self.value_history.append(value_portfolio(self.market_data[t,:],self.algorithm.portfolio))
 
     def output_results(self):
         '''
