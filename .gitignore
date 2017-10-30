@@ -1,2 +1,3 @@
 *.pyc
 code/__pycache__
+code/algorithms/__pycache__

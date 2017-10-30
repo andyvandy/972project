@@ -25,8 +25,8 @@ def main(args):
         "period":1,
         #"algo_class":constant_rebalance.Constant_rebalance,
         "algo_class":online_newton.Online_newton,
-        #"end":market_data.shape[0],
-        "end":100,
+        "end":market_data.shape[0],
+        #"end":2000,
         "market_data":market_data,
         "verbose":args.verbose,
         "model_params":model_params,
@@ -35,7 +35,7 @@ def main(args):
     sim.run()
     if args.plot: 
         plot_value_over_time(sim.value_history )
-        plot_value_over_time(sim.portfolio_history )
+        plot_value_over_time(sim.portfolio_weight_history )
 
 class Simulation:
     '''
@@ -48,12 +48,13 @@ class Simulation:
         self.end=end
         self.market_data=market_data.as_matrix()
         #self.relative_market_data=market_data.pct_change().fillna(1).as_matrix() +1#extract_relative_prices(self.market_data)
-        self.relative_market_data=market_data.pct_change().dropna().as_matrix() +1#extract_relative_prices(self.market_data)
+        self.relative_market_data=market_data.pct_change().dropna().as_matrix() +1#extract_relative_prices(self.market_data) #todo verify closely, think this is right
         self.algorithm=algo_class(sim=self,period=period,n_assets=self.market_data.shape[1],verbose=verbose)
         self.model_params=model_params 
         self.p_hist=[]
         self.rel_p_hist=[]
         self.portfolio_history=[] #todo preallocate these
+        self.portfolio_weight_history=[] #todo preallocate these
         self.value_history=[]
         
 
@@ -67,6 +68,7 @@ class Simulation:
 
         self.algorithm.setup(self.market_data[0,:],model_params=self.model_params)
         self.log_state(0)
+        self.portfolio_history.append(self.algorithm.portfolio)
         for t in tqdm(range(1,self.end,self.period)):
             self.step(t)
 
@@ -78,23 +80,25 @@ class Simulation:
         assert that the portfolio value doesn't change within a simulation step
         Log the new state
         '''
-        if self.verbose:
-            print("Simulation step # {}:".format(t))
+        if self.verbose:print("Simulation step # {}:".format(t))
+            
 
-        self.p_hist= self.market_data[:t+1,:] # we sue these to make sure that we don't accidentally use data we should have access to in our algos
+        self.p_hist= self.market_data[:t+1,:] # we use these to make sure that we don't accidentally use data we should have access to in our algos
         self.rel_p_hist= self.relative_market_data[:t+1,:]
         initial_value=value_portfolio(self.algorithm.portfolio,self.p_hist[-1])
         #if self.verbose: print(self.price_history)
         self.algorithm.step(t)
         self.log_state(t)
         try:
-            assert self.value_history[-1] == initial_value # important to crash if this occurs
+            assert round(self.value_history[-1],8) == round(initial_value,8) # important to crash if this occurs
         except:
             print("initial value {} -> {} in same step!".format(initial_value, self.value_history[-1]))
 
     def log_state(self,t):
         self.portfolio_history.append(self.algorithm.portfolio)
-        self.value_history.append(value_portfolio(self.market_data[t,:],self.algorithm.portfolio))
+        value=value_portfolio(self.market_data[t,:],self.algorithm.portfolio)
+        self.portfolio_weight_history.append([self.algorithm.portfolio[i]*self.market_data[t,i]/value for i in range(len(self.algorithm.portfolio))])
+        self.value_history.append(value)
 
     def output_results(self):
         '''

@@ -39,20 +39,28 @@ class Online_newton(Algorithm):
 
         weight=self.value*self.uniform_weight
         uniform_portfolio= [weight/price_i for price_i in self.sim.p_hist[t,:]]
+
+        if t<5:
+            self.portfolio=uniform_portfolio
+            return
         #other portion
 
         A_t_m1=np.sum([
-                    (1.0/(np.dot(self.sim.rel_p_hist[i,:],self.portfolio)**2)) * (np.transpose(self.sim.rel_p_hist[i,:]) @ self.sim.rel_p_hist[i,:])
+                    (1.0/(np.dot(self.sim.rel_p_hist[i,:],p_norm)**2)) * np.outer(self.sim.rel_p_hist[i,:],self.sim.rel_p_hist[i,:])
                     for i in range(t)
-                    ])+np.identity(self.n_assets)
-        if self.verbose >1 : print("\tA_t_m1: {}".format(A_t_m1))
+                    ],axis=0)+np.identity(self.n_assets)
+        if self.verbose >1 : print("A_t_m1:\n {}".format(A_t_m1))
         A_t_m1_inv= np.linalg.inv(A_t_m1)
         if self.verbose >1 : print(A_t_m1_inv)
         b_t_m1=(1.0+1.0/self.beta)*np.sum([
-                                    (1.0/np.dot(self.sim.rel_p_hist[i,:],self.portfolio)) * np.transpose(self.sim.rel_p_hist[i,:])
+                                    (1.0/np.dot(self.sim.rel_p_hist[i,:],p_norm)) *(self.sim.rel_p_hist[i,:])
                                     for i in range(t)] ,axis=0
                                     )
         if self.verbose >1 : print("b_t_m1",b_t_m1)
+        if self.verbose >1 : 
+            for i in range(t):
+                print((1.0/np.dot(self.sim.rel_p_hist[i,:],p_norm)) *(self.sim.rel_p_hist[i,:]))
+                print((self.sim.rel_p_hist[i,:]),(1.0/np.dot(self.sim.rel_p_hist[i,:],p_norm)))
         newton_portfolio=projection_in_norm(q=self.delta*A_t_m1_inv @ b_t_m1,A=A_t_m1,cur_p=self.portfolio,prices=self.sim.p_hist[t,:],verbose=self.verbose)
 
         #newton_portfolio=[new_pnorm[i]/self.sim.p_hist[t,i]* self.value for i in range(len(new_pnorm)) ] 
@@ -66,26 +74,46 @@ class Online_newton(Algorithm):
             print("\tvalue: {}".format(self.value))
             print("\tnew value: {}".format(value_portfolio(self.sim.p_hist[t,:],self.portfolio) ))
             #print([np.transpose(self.sim.rel_p_hist[i,:]) for i in range(t)])
-            #print([(1.0/np.dot(self.sim.rel_p_hist[i,:],self.portfolio)) * np.transpose(self.sim.rel_p_hist[i,:]) for i in range(t)])
+            #print(np.outer(self.sim.rel_p_hist[t-1,:], self.sim.rel_p_hist[t-1,:].T)  )
 
 
 
+
+#def projection_in_norm(q,A,cur_p,prices,verbose=0):
+#    bounds=[(0,None)] *(len(cur_p)-1)
+#    cons = ({'type': 'ineq', 'fun': lambda x:  -value_portfolio(prices[1:],x)+value })
+#    value=value_portfolio(prices,cur_p)
+#    if verbose>1:
+#        print("initial value =",value)
+#    def target_function(x):
+#        p=np.concatenate(([(value-value_portfolio(prices[1:],x))/prices[0]],x))
+#        print("p,q:",p,q)
+#        return (q-p) @ A @ np.transpose(q-p) 
+#
+#    res= minimize(target_function,cur_p[1:],bounds=bounds,constraints=cons)
+#    new_port=np.concatenate(([(value-value_portfolio(prices[1:],res.x))/prices[0]],res.x))
+#
+#    if verbose >1 : print(res)
+#    if verbose >1 : print(new_port)
+#    if verbose>1: print("new value =",value_portfolio(prices,new_port))
+#    return new_port#
 
 def projection_in_norm(q,A,cur_p,prices,verbose=0):
     bounds=[(0,None)] *(len(cur_p)-1)
-    cons = ({'type': 'ineq', 'fun': lambda x:  -value_portfolio(prices[1:],x)+value })
+    cons = ({'type': 'ineq', 'fun': lambda x:  -sum(x)+1 })
     value=value_portfolio(prices,cur_p)
     if verbose>1:
         print("initial value =",value)
     def target_function(x):
-        p=np.concatenate(([(value-value_portfolio(prices[1:],x))/prices[0]],x))
-        #print("p:",p)
-        return np.transpose(q-p) @ A @ (q-p) 
+        p=np.concatenate(([1-sum(x)],x))
+        #print("p,q:",p,q)
+        return (q-p) @ A @ np.transpose(q-p) 
 
     res= minimize(target_function,cur_p[1:],bounds=bounds,constraints=cons)
-    new_port=np.concatenate(([(value-value_portfolio(prices[1:],res.x))/prices[0]],res.x))
+    new_port=np.concatenate(([1-sum(res.x)],res.x))
+    new_port=[new_port[i]*value/prices[i] for i in range(len(prices))]
 
     if verbose >1 : print(res)
     if verbose >1 : print(new_port)
     if verbose>1: print("new value =",value_portfolio(prices,new_port))
-    return new_port
+    return new_port#
