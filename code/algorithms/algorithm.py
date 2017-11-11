@@ -2,15 +2,16 @@
 Base class that other algorithms will inherit from
 
 The algorithm is responsible for setting the portfolio vector each period
+
+Initially I had this setup where the algorithm could access the simulation object it lived in and its attributes , 
+I think that this bi directional access of data is just asking for trouble.  
 '''
 import numpy as np
 
 class Algorithm:
-    def __init__(self,sim,period,n_assets,verbose=False):
+    def __init__(self,n_assets,verbose=False):
         self.verbose=verbose
         if verbose: "print initializing Algorithm"
-        self.sim=sim
-        self.period=period
         self.n_assets=n_assets
         self.uniform_weight=1.0/self.n_assets # don't want to recompute this all of the time
         self.portfolio=[0]*n_assets
