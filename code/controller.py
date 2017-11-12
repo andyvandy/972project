@@ -21,8 +21,8 @@ class Controller:
         self.algorithm=algo_class(n_assets=data_feed.n_assets,verbose=verbose)
         self.model_params=model_params 
         self.last_market_data=None
-        self.portfolio_history=[] #todo preallocate these
-        self.portfolio_weight_history=[] #todo preallocate these
+        self.portfolio_history=[] #these are the raw postions
+        self.portfolio_weight_history=[] #these are the percentage values of portfolio positions
         self.value_history=[]
         
 
@@ -65,7 +65,7 @@ class Controller:
     def log_state(self,t,market_period_data):
         self.portfolio_history.append(self.algorithm.portfolio)
         value=value_portfolio(self.prices,self.algorithm.portfolio)
-        self.portfolio_weight_history.append(self.algorithm.portfolio/self.algorithm.portfolio.sum())
+        self.portfolio_weight_history.append(self.algorithm.portfolio*self.prices/value)
         self.value_history.append(value)
 
     def output_results(self):
