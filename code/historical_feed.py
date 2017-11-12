@@ -1,13 +1,9 @@
 '''
 This class is used to feed in historical data to the algorithm for back testing purposes
 
-Wehn we create the class we can setup a few different ways to laod the data in, 
-this could be handy in that we won't need multiple processing steps
-Also I didn't want to delete my sqlite loading function.
+load the data in from a series of Csvs, this is handy since a huge file with 100s of coins is slow to load..
 
-TODO:
-    -implement filter based on start/stop date
-    -implement filter based on asset list
+
 '''
 from data_feed import *
 import os
@@ -20,38 +16,28 @@ DATA_DIR=os.path.join("..","data") #todo move to a config file.
 class HistoricalFeed(DataFeed):
 
 
-    def __init__(self,filename,file_type="csv",start=None,end=None,assets=None,verbose=0):
+    def __init__(self,pairs,folder,exchange="kraken",start=None,end=None,assets=None,verbose=0):
         '''
-        Takes in a sqlite file from which to read the historical data
-        If no end or start dates are specified then all of the the observations are used.
-        Also if no list of assets is provided then all of the assets in the file are used.
+        Takes a list of pairs for which to load in the csv files
+        For now kraken is default exchange simply because it gives us data that goes further back
         '''
+        self.n_assets=len(pairs)
+        pair_dfs={}
+        for pair in pairs:
+            pair_dfs[pair]=self.load_csv(filename=os.path.join(folder,exchange+"_"+pair.replace("/","_")+".csv"))
         
-        if file_type.lower()=="csv":
-            load_function=self.load_csv
-        elif file_type.lower()=="sqlite":
-            load_function=self.load_sqlite
-        else:
-            logging.warning('file loading method not found!')
-            raise Exception('file load method not implemented')
+        self.df = pd.concat(pair_dfs,axis=1).dropna()    
 
-        load_function(filename=filename,start=start,end=end,assets=assets,verbose=verbose)
-        
-        #logging.debug("shape of data: {}".format(self.df.shape))
+        logging.debug("shape of data: {}".format(self.df.shape))
         #shape was weird, unclear why it isn't defaulting to multiindexing
-        self.n_assets=len(assets)
+        #logging.debug(self.df)
 
-    def load_sqlite(self,filename,start=None,end=None,assets=None,verbose=0):
-        conn = sqlite3.connect(os.path.join(DATA_DIR,filename)) 
-        logging.debug("Historical Feed connected to sqlite3 file {}...".format(filename))
-        with conn:
-            self.df=pd.read_sql("SELECT * FROM data",conn ,index_col="index",parse_dates=["index"])
-            if verbose: print("Data succesfully read from sqlite3 file  ({}) to pandas dataframe...".format(filename))
 
-    def load_csv(self,filename,start=None,end=None,assets=None,verbose=0):
+    def load_csv(self,filename):
         logging.debug("Historical Feed loading csv file {}...".format(filename))
-        self.df=pd.read_csv(filename,low_memory=False,index_col=0,parse_dates=True,header=[0,1]) # this could probably be more efficient
-        self.df=self.df[assets].dropna()
+        df=pd.read_csv(filename,low_memory=False,index_col='timestamp',parse_dates=True,header=0) 
+        #logging.debug(df)
+        return df
 
     def get_data(self):
         '''

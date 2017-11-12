@@ -34,8 +34,15 @@ class Controller:
         '''
         logging.info('Setting up algo with {} assets...'.format(self.data_feed.n_assets))
         
-        #todo make this better
-        self.algorithm.setup([1/float(self.data_feed.n_assets)]*self.data_feed.n_assets,model_params=self.model_params)
+        #first period
+        t0,first_period_data=next(self.data_feed.get_data())
+        first_closing_prices=first_period_data.loc[:,'close']
+
+
+        #todo make this better/ set up for live trading
+        initial_portfolio=100/first_closing_prices/first_closing_prices.shape[0]
+
+        self.algorithm.setup(initial_portfolio,model_params=self.model_params)
 
         self.portfolio_history.append(self.algorithm.portfolio)
         for t,market_period_data in self.data_feed.get_data():

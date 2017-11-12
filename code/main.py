@@ -2,7 +2,7 @@
 Main file to run all of our code from. Not much to say yet
 
 TODO:
-storing results of a simulation to a file
+storing results of a backtest to a file
 
 '''
 import logging
@@ -25,22 +25,22 @@ import pandas as pd
 
 def main(args):
     data_feed_params={
-        "filename":join("..","data",args.data),
-        "file_type":"csv",
-        "assets":["BTC","LTC","ETH"],#todo add to argparse
+        "folder":join("..","data",args.data),
+        "pairs":args.pairs,
         "verbose":args.verbose,
+        "exchange":args.exchange,
     }
-    sim_data_feed=HistoricalFeed(**data_feed_params)
-
+    controller_data_feed=HistoricalFeed(**data_feed_params)
     model_params={
         'eta':0,
         'beta':1,
         'delta':1.0/8,
+        'rebalance_frequency': 5 ,#in days
     }
     controller_params={
         "algo_class":constant_rebalance.Constant_rebalance,
         #"algo_class":online_newton.Online_newton,
-        "data_feed":sim_data_feed,
+        "data_feed":controller_data_feed,
         "verbose":args.verbose,
         "model_params":model_params,
     }
@@ -65,6 +65,8 @@ if __name__ =="__main__":
     parser = argparse.ArgumentParser(description='Run simulations')
     parser.add_argument('--verbose', '-v', action='count',help='use this flag to control debug printouts',default =0)
     parser.add_argument('--plot', '-p', action="store_true",help='turn plotting on')
-    parser.add_argument('--data',help='select the data source',default ="coins.csv")
+    parser.add_argument('--data',help='select the data source folder',default =os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),"data","coins"))
+    parser.add_argument('--exchange',help="what exchange to use", default = "kraken") #todo make multi exchange algos work
+    parser.add_argument('--pairs', help='pass a list of pairs to download', nargs='+',type=str,default=["BTC/USD","ETH/USD","LTC/USD","XRP/USD"])
     args=parser.parse_args()
     main(args)

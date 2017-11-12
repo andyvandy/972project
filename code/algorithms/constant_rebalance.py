@@ -1,16 +1,19 @@
 '''
 Constant rebalancing strategy
 
--TODO make this algorithm behave properly in the face of already having a portfolio initialized
+-TODO analyze optimal rebalancing frequency
 
 '''
 from .algorithm import *
 import numpy as np
+import logging
 
 class Constant_rebalance(Algorithm):
     def setup(self,intial_portfolio,model_params):
         #todo consider how to format this for live trading.
         self.portfolio=intial_portfolio
+        self.rebalance_frequency=model_params['rebalance_frequency']
+        self.last_trade=None
 
 
     def format_market_data(self,market_data):
@@ -25,11 +28,17 @@ class Constant_rebalance(Algorithm):
 
     def step(self,t,market_data):
         '''
-            Look at the most recent period and rebalance accordingly.
+            Check if enough time has passed since the last rebalancing, if so, rebalance
+            Rebalance the postions held in each asset to be equal in value.
         '''
+        if self.last_trade != None and (t-self.last_trade).days < self.rebalance_frequency:
+            # we need to wait longer until rebalancing
+            return 
+
+        self.last_trade=t
+
         closing_prices= self.format_market_data(market_data)
 
-        
         self.value=value_portfolio(closing_prices,self.portfolio)
 
         self.portfolio= self.value/closing_prices/closing_prices.shape[0]
