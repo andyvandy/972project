@@ -33,13 +33,13 @@ def main(args):
     controller_data_feed=HistoricalFeed(**data_feed_params)
     model_params={
         'eta':0,
-        'beta':1,
+        'beta':1.0,
         'delta':1.0/8,
-        'rebalance_frequency': 5 ,#in days
+        'trade_frequency': 5 ,#in days
     }
     controller_params={
-        "algo_class":constant_rebalance.Constant_rebalance,
-        #"algo_class":online_newton.Online_newton,
+        #"algo_class":constant_rebalance.Constant_rebalance,
+        "algo_class":online_newton.Online_newton,
         "data_feed":controller_data_feed,
         "verbose":args.verbose,
         "model_params":model_params,
@@ -47,8 +47,8 @@ def main(args):
     controller=Controller(**controller_params)
     controller.run()
     if args.plot: 
-        plot_value_over_time(controller.value_history )# todo log scale
-        plot_value_over_time(controller.portfolio_weight_history ) #todo value weighted not position size weighted.
+        plot_value_over_time(controller.timestamps,controller.value_history ,title="Portfolio value using {}".format(args.algo) )# todo log scale
+        plot_value_over_time(controller.timestamps,controller.portfolio_weight_history,title="Portfolio value weights under {}".format(args.algo),labels=controller.asset_names ) #todo value weighted not position size weighted.
 
 
 
@@ -68,5 +68,6 @@ if __name__ =="__main__":
     parser.add_argument('--data',help='select the data source folder',default =os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))),"data","coins"))
     parser.add_argument('--exchange',help="what exchange to use", default = "kraken") #todo make multi exchange algos work
     parser.add_argument('--pairs', help='pass a list of pairs to download', nargs='+',type=str,default=["BTC/USD","ETH/USD","LTC/USD","XRP/USD"])
+    parser.add_argument('--algo', help='The algo you want to use in the algos folder',default="Online_newton")
     args=parser.parse_args()
     main(args)

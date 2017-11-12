@@ -11,12 +11,9 @@ import numpy as np
 class Algorithm:
     def __init__(self,n_assets,verbose=False):
         self.verbose=verbose
-        if verbose: "print initializing Algorithm"
-        self.n_assets=n_assets
-        self.uniform_weight=1.0/self.n_assets # don't want to recompute this all of the time
-        self.portfolio=[0]*n_assets
-        self.value= 100
-         #implemented in each algo's class
+        if verbose: print(" initializing Algorithm")
+        self.n_assets=n_assets #todo remove
+        self.last_trade=None
 
     
 

@@ -9,11 +9,11 @@ import numpy as np
 import logging
 
 class Constant_rebalance(Algorithm):
-    def setup(self,intial_portfolio,model_params):
+    def setup(self,intial_portfolio,initial_period,model_params):
         #todo consider how to format this for live trading.
         self.portfolio=intial_portfolio
-        self.rebalance_frequency=model_params['rebalance_frequency']
-        self.last_trade=None
+        self.trade_frequency=model_params['trade_frequency']
+        
 
 
     def format_market_data(self,market_data):
@@ -31,7 +31,7 @@ class Constant_rebalance(Algorithm):
             Check if enough time has passed since the last rebalancing, if so, rebalance
             Rebalance the postions held in each asset to be equal in value.
         '''
-        if self.last_trade != None and (t-self.last_trade).days < self.rebalance_frequency:
+        if self.last_trade != None and (t-self.last_trade).days < self.trade_frequency:
             # we need to wait longer until rebalancing
             return 
 

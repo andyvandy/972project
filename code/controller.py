@@ -24,6 +24,8 @@ class Controller:
         self.portfolio_history=[] #these are the raw postions
         self.portfolio_weight_history=[] #these are the percentage values of portfolio positions
         self.value_history=[]
+        self.timestamps=[] #mostly for record creation and plotting
+        self.asset_names=[] #used for ouput and for plotting
         
 
     def run(self):
@@ -37,12 +39,14 @@ class Controller:
         #first period
         t0,first_period_data=next(self.data_feed.get_data())
         first_closing_prices=first_period_data.loc[:,'close']
-
+        logging.info(first_closing_prices.keys())
+        logging.info(dir(first_closing_prices))
+        self.asset_names = first_closing_prices.keys()
 
         #todo make this better/ set up for live trading
         initial_portfolio=100/first_closing_prices/first_closing_prices.shape[0]
 
-        self.algorithm.setup(initial_portfolio,model_params=self.model_params)
+        self.algorithm.setup(initial_portfolio,first_period_data,model_params=self.model_params)
 
         self.portfolio_history.append(self.algorithm.portfolio)
         for t,market_period_data in self.data_feed.get_data():
@@ -59,7 +63,6 @@ class Controller:
         self.prices=market_period_data.loc[:,'close']    
 
         initial_value=value_portfolio(self.prices,self.algorithm.portfolio)
-        #if self.verbose: print(self.price_history)
         self.algorithm.step(t,market_period_data)
         self.log_state(t,market_period_data)
         try:
@@ -74,6 +77,7 @@ class Controller:
         value=value_portfolio(self.prices,self.algorithm.portfolio)
         self.portfolio_weight_history.append(self.algorithm.portfolio*self.prices/value)
         self.value_history.append(value)
+        self.timestamps.append(t)
 
     def output_results(self):
         '''
