@@ -21,7 +21,7 @@ class HistoricalFeed(DataFeed):
         Takes a list of pairs for which to load in the csv files
         For now kraken is default exchange simply because it gives us data that goes further back
         '''
-        self.n_assets=len(pairs)
+        self.pairs=pairs
         pair_dfs={}
         for pair in pairs:
             pair_dfs[pair]=self.load_csv(filename=os.path.join(folder,exchange+"_"+pair.replace("/","_")+".csv"))

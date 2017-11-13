@@ -9,12 +9,13 @@ import numpy as np
 import logging
 
 class Constant_rebalance(Algorithm):
-    def setup(self,intial_portfolio,initial_period,model_params):
+    def setup(self,intial_portfolio,initial_period,model_params,data_column="close"):
         #todo consider how to format this for live trading.
         self.portfolio=intial_portfolio
         self.trade_frequency=model_params['trade_frequency']
         
-
+        #to handle historical vs live, could be "close" or "last"
+        self.data_column=model_params["data_column"]
 
     def format_market_data(self,market_data):
         '''
@@ -22,7 +23,7 @@ class Constant_rebalance(Algorithm):
         Expecting data to come in as a tuple of the timestamp and a 2d data frame where the dimensions are assets and attributes
         
         '''
-        return market_data.loc[:,'close']
+        return market_data.loc[:,self.data_column]
 
 
 

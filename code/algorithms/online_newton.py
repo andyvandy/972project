@@ -15,17 +15,21 @@ from scipy.optimize import minimize
 
 
 class Online_newton(Algorithm):
-    def setup(self,intial_portfolio,initial_period,model_params):
+    def setup(self,intial_portfolio,initial_period,model_params,data_column="close"):
         self.portfolio=intial_portfolio
         self.eta=model_params['eta']
         self.beta=model_params['beta']
         self.delta=model_params['delta']
         self.trade_frequency=model_params['trade_frequency']
+        self.data_column=model_params["data_column"]
         self.previous_closes=self.format_market_data(initial_period)
 
         #store the reusable part of computing A and b
         self.a_summation=0
         self.b_summation=0
+
+        #to handle historical vs live, could be "close" or "last"
+        
 
     def format_market_data(self,market_data):
         '''
@@ -33,7 +37,7 @@ class Online_newton(Algorithm):
         Expecting data to come in as a tuple of the timestamp and a 2d data frame where the dimensions are assets and attributes
         TODO: maybe roll this into the algorithm base class?
         '''
-        return market_data.loc[:,'close']
+        return market_data.loc[:,self.data_column]
 
 
     def step(self,t,market_data):

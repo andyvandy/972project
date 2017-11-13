@@ -1,0 +1,3 @@
+#some data is uploaded so that the code is useable but we don't want to load it all in here.
+*.csv
+coins/*.csv

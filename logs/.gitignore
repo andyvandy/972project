@@ -1,0 +1,2 @@
+#we don't want to commit any of the log files by accident
+*.log
