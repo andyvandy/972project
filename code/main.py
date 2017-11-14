@@ -2,10 +2,11 @@
 Main file to run all of our code from. Not much to say yet
 
 TODO:
-storing results of a backtest to a file
-Split up the backtest,paper,and live modes more
-loading of algorithms modules by name
-setting of logging level from args
+    -storing results of a backtest to a file
+    -Split up the backtest,paper,and live modes more
+    -loading of algorithms modules by name
+    -setting of logging level from args
+    -move model params to config files
 
 '''
 import logging
@@ -56,7 +57,7 @@ def main(args):
         'eta':0,
         'beta':1.0,
         'delta':1.0/8,
-        'trade_frequency': 5 ,#in days
+        'trade_frequency': 1.0/24 ,#in days
     })
     controller_params.update({
         "algo_class":constant_rebalance.Constant_rebalance,

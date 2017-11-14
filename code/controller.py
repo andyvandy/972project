@@ -41,8 +41,9 @@ class Controller:
         if self.log_folder is None:#log to stdout in this case
             handler=logging.StreamHandler()
         else:
-            handler=logging.FileHandler(filename=os.path.join(self.log_folder,"test.log"))
+            handler=logging.FileHandler(filename=os.path.join(self.log_folder,"{}.log".format(self.algorithm.__class__.__name__)))
         self.logger.addHandler(handler)
+        self.reset_logs()#temporary
           
     def run(self):
         '''
@@ -79,6 +80,7 @@ class Controller:
 
         initial_value=value_portfolio(self.prices,self.algorithm.portfolio)
         self.algorithm.step(t,market_period_data)
+        self.execute()
         self.log_history(t,market_period_data)
         try:
             assert round(self.value_history[-1],8) == round(initial_value,8) # important to crash if this occurs
@@ -91,12 +93,20 @@ class Controller:
         #run end of period update stuff
         self.last_market_data=market_period_data
 
+    def execute(self):
+        '''
+        Perform actions such that we translate the new portfolio selection into market actions
+        TODO
+        '''
+        self.actions=[{"type":"TODO"}]
+
     def log_history(self,t,market_period_data):
         #log the historical values for analysis or backtested stratgies largely
         self.portfolio_history.append(self.algorithm.portfolio)
         value=value_portfolio(self.prices,self.algorithm.portfolio)
         self.portfolio_weight_history.append(self.algorithm.portfolio*self.prices/value)
         self.value_history.append(value)
+        self.actions_history.append(self.actions)
         self.timestamps.append(t)
 
 
@@ -104,20 +114,37 @@ class Controller:
         '''
         log period market data as well as actions the algo has taken to a outputstream. 
         USe the built in logger to keep this easy/efficient
+        TODO: 
+            -actually make this print out nicely later
+            
         '''
-        rec_header="\n{timestamp}-- Trade log for: {algo}\n".format(timestamp=t,algo=self.algorithm.__class__.__name__)
-        rec_prices="{}\n".format(market_period_data)
-        rec_portfolio="  portfolio:\n"+"".join(["{:>4}\n".format(position) for position in self.algorithm.portfolio])
-        value=value_portfolio(self.prices,self.algorithm.portfolio)
-        rec_value="  value:\n{:>4}\n".format(value)
-        rec_actions="  actions:todo\n"
-        record="".join([rec_header,rec_prices,rec_portfolio,rec_value,rec_actions])
+        header="\n{timestamp}-- Trade log for: {algo}\n".format(timestamp=t,algo=self.algorithm.__class__.__name__)
+        prices="{}\n".format(market_period_data)
+        portfolio="  portfolio:\n"+"".join(["{:>4}\n".format(position) for position in self.algorithm.portfolio])
+        value="  value:\n{:>4}\n".format(self.value_history[-1])
+        actions="  actions:\n{}\n".format(self.actions)
+        record="".join([header,prices,portfolio,value,actions])
         self.logger.info(record)
 
-        if self.log_folder is not None:
-            with open(os.path.join(self.log_folder,"value_history_{}.csv".format(self.algorithm.__class__.__name__)),"a") as f:
-                f.write("{t},{value}\n".format(t=t,value=value))
 
+        if self.log_folder is not None:
+            #log the value
+            with open(os.path.join(self.log_folder,"value_history_{}.csv".format(self.algorithm.__class__.__name__)),"a") as f:
+                f.write("{t},{value}\n".format(t=t,value=self.value_history[-1]))
+
+            #log the portfolio weights
+            with open(os.path.join(self.log_folder,"weight_history_{}.csv".format(self.algorithm.__class__.__name__)),"a") as f:
+                f.write("{t},{weights}\n".format(t=t,weights=",".join([str(weight) for weight in self.portfolio_weight_history[-1]])))
+
+    def reset_logs(self):
+        #-currently going to wipe the logs at the start since the portoflio initialization 
+        # resets the portfolio each time which ruins the graph and data
+        with open(os.path.join(self.log_folder,"{}.log".format(self.algorithm.__class__.__name__)),"w") as f:
+            pass
+        with open(os.path.join(self.log_folder,"value_history_{}.csv".format(self.algorithm.__class__.__name__)),"w") as f:
+            pass
+        with open(os.path.join(self.log_folder,"weight_history_{}.csv".format(self.algorithm.__class__.__name__)),"w") as f:
+            pass
     def output_results(self):
         '''
         compute various performance measures such as the sharpe ratio.

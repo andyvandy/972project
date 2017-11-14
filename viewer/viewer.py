@@ -53,12 +53,23 @@ app.layout = html.Div([
     html.H3("value"),
     dcc.Dropdown(id='dropdown-algo', options=DROPDOWN_OPTIONS , value=DROPDOWN_OPTIONS[0]['value']),
     html.Div([
-        dcc.Graph(id="graph-portfoliovalue"),
-        ]),
-    html.H3("coin"),
-    dcc.Input(id='input-1', type="text", value='ETH'),
-    html.H3("basis"),
-    dcc.Input(id='input-2', type="text", value='BTC'),
+        html.Div([
+            dcc.Graph(id="graph-portfoliovalue"),
+        ], className="six columns"),
+        html.Div([
+            dcc.Graph(id="graph-portfolioweights"),
+        ], className="six columns"),
+    ]),
+    html.Div([
+        html.Div([
+            html.H3("coin"),
+            dcc.Input(id='input-1', type="text", value='ETH'),
+        ], className="three columns"),
+        html.Div([
+            html.H3("basis"),
+            dcc.Input(id='input-2', type="text", value='BTC'),
+        ],className="three columns"),
+    ]),
     html.Div(id='table'),
     html.H2("logs"),
     dcc.Markdown(id='markdown-logs'),
@@ -114,11 +125,37 @@ def update_value_graph(algo):
     return fig
 
 
+@app.callback(Output('graph-portfolioweights', 'figure'),
+              [Input('dropdown-algo', 'value')])
+def update_weight_graph(algo):
+    #again todo properly
+
+    df=pd.read_csv(os.path.join(config['GENERAL']['LOGS_DIR'],"weight_history_{}.csv".format(algo)),
+                index_col=0,
+                parse_dates=True,
+                header=None
+        )
+    print(df)
+    fig = {
+        'data': [
+
+            {
+                'x':df.index,
+                'y':df[column],
+                'name':"Portfolio weight of {} over time".format(column),
+            }
+            for column in df.columns
+        ]
+    }
+    return fig
+
+
+
 @app.callback(Output('markdown-logs', 'children'),
               [Input('dropdown-algo', 'value')])
 def display_logs(algo):
     #todo
-    logs="  \n".join(tailer.tail(open(os.path.join(config['GENERAL']['LOGS_DIR'],"test.log"),"r"),100 ))
+    logs="  \n".join(tailer.tail(open(os.path.join(config['GENERAL']['LOGS_DIR'],"{}.log".format(algo)),"r"),100 ))
     print(logs)
     return logs
 
