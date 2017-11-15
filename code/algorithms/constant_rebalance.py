@@ -32,7 +32,7 @@ class Constant_rebalance(Algorithm):
             Check if enough time has passed since the last rebalancing, if so, rebalance
             Rebalance the postions held in each asset to be equal in value.
         '''
-        if self.last_trade != None and (t-self.last_trade).days < self.trade_frequency:
+        if self.last_trade != None and (t-self.last_trade).hours/24.0 < self.trade_frequency:
             # we need to wait longer until rebalancing
             return 
 
